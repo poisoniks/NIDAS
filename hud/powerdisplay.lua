@@ -114,7 +114,8 @@ end
 
 function powerDisplay.widget(glasses, data)
     if data ~= nil then
-        logToFile("powerDisplay.widget() called. Data: " .. serialization.serialize(data))
+        logToFile("powerDisplay.widget() called.")
+        logToFile("Data received: " .. serialization.serialize(data))
         if data.state ~= states.MISSING then
 
             --Wireless EU addition
@@ -124,6 +125,7 @@ function powerDisplay.widget(glasses, data)
                 if currentEU > maxEU then
                     maxEU = maxEU * 10
                     updateMaxEU(maxEU)
+                    logToFile("CurrentEU > MaxEU. Max EU updated")
                 end
             else
                 currentEU = math.abs(math.floor(data.storedEU))
@@ -147,6 +149,7 @@ function powerDisplay.widget(glasses, data)
             if energyData.intervalCounter == 1 then
                 energyData.startTime = computer.uptime()
                 energyData.readings[1] = currentEU
+                logToFile("Initial state of energy data: " .. serialization.serialize(energyData))
             end
             if energyData.intervalCounter < energyData.updateInterval then
                 energyData.intervalCounter = energyData.intervalCounter + 1
@@ -172,11 +175,11 @@ function powerDisplay.widget(glasses, data)
                     end
                 end
                 energyData.intervalCounter = 1
-
-                logToFile("I/O update: startTime = " .. energyData.startTime .. ", endTime = " .. energyData.endTime ..
-                          ", energyPerTick = " .. energyData.energyPerTick .. ", highestInput = " .. energyData.highestInput ..
-                          ", highestOutput = " .. energyData.highestOutput)
             end
+
+            logToFile("I/O update: startTime = " .. energyData.startTime .. ", endTime = " .. energyData.endTime ..
+                      ", energyPerTick = " .. energyData.energyPerTick .. ", highestInput = " .. energyData.highestInput ..
+                      ", highestOutput = " .. energyData.highestOutput)
 
             energyData.offset = energyData.offset + 2
             if energyData.energyPerTick >= 0 then
@@ -185,11 +188,14 @@ function powerDisplay.widget(glasses, data)
                 energyData.offset = energyData.offset + 10*(energyData.energyPerTick / energyData.highestOutput)
             end
 
+            logToFile("Offset update: offset = " .. energyData.offset)
+
             --5 minute average
             if energyData.minuteData.intervalCounter == 1 then
                 energyData.minuteData.startTime = computer.uptime()
                 energyData.minuteData.readings[1] = currentEU
                 energyData.minuteData.intervalCounter = energyData.minuteData.intervalCounter + 1
+                logToFile("Adding minute reading: " .. currentEU)
             end
             if tick % 6000 == 0 then
                 energyData.minuteData.endTime = computer.uptime()
@@ -200,6 +206,7 @@ function powerDisplay.widget(glasses, data)
                 energyData.minuteData.intervalCounter = 1
 
                 logToFile("5m average update: startTime = " .. energyData.minuteData.startTime .. ", endTime = " .. energyData.minuteData.endTime ..
+                          "doing (" .. energyData.minuteData.readings[2] .. " - " .. energyData.minuteData.readings[1] .. ") / " .. ticks .. 
                           ", average = " .. energyData.minuteData.average)
             end
 
@@ -207,6 +214,7 @@ function powerDisplay.widget(glasses, data)
                 energyData.hourData.startTime = computer.uptime()
                 energyData.hourData.readings[1] = currentEU
                 energyData.hourData.intervalCounter = energyData.hourData.intervalCounter + 1
+                logToFile("Adding hour reading: " .. currentEU)
             end
             if tick % 72000 == 0 then
                 energyData.hourData.endTime = computer.uptime()
@@ -216,6 +224,7 @@ function powerDisplay.widget(glasses, data)
                 energyData.hourData.intervalCounter = 1
 
                 logToFile("1h average update: startTime = " .. energyData.hourData.startTime .. ", endTime = " .. energyData.hourData.endTime ..
+                          "doing (" .. energyData.hourData.readings[2] .. " - " .. energyData.hourData.readings[1] .. ") / " .. ticks ..
                           ", average = " .. energyData.hourData.average)
             end
 
@@ -424,6 +433,7 @@ function powerDisplay.widget(glasses, data)
                 end
             end
         end
+        logToFile("powerDisplay.widget() ends.\n\n\n\n\n\n")
     end
 end
 
