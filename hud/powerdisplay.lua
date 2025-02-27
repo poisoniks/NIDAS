@@ -114,15 +114,7 @@ end
 
 function powerDisplay.widget(glasses, data)
     if data ~= nil then
-        logToFile("powerDisplay.widget() called. Data: " .. serialization.serialize({
-            wirelessEU = data.wirelessEU,
-            storedEU = data.storedEU,
-            EUCapacity = data.EUCapacity,
-            EUIn = data.EUIn,
-            EUOut = data.EUOut,
-            state = data.state,
-            problems = data.problems
-        }))
+        logToFile("powerDisplay.widget() called. Data: " .. serialization.serialize(data))
         if data.state ~= states.MISSING then
 
             --Wireless EU addition
@@ -227,32 +219,7 @@ function powerDisplay.widget(glasses, data)
                           ", average = " .. energyData.hourData.average)
             end
 
-            local fillTimeString = ""
-            local fillTime = 0
-            if data.wirelessMode then
-                hudObjects[i].dynamic.percentage.setText("")
-            else
-                if energyData.energyPerTick > 0 then
-                    fillTime = math.floor((maxEU-currentEU)/(energyData.energyPerTick*20))
-                    fillTimeString = "Full: " .. time.format(math.abs(fillTime))
-                elseif energyData.energyPerTick < 0 then
-                    fillTime = math.floor((currentEU)/(energyData.energyPerTick*20))
-                    fillTimeString = "Empty: " .. time.format(math.abs(fillTime))
-                else
-                    fillTimeString = ""
-                end
-                if math.abs(fillTime) > 500000 or percentage < 0.05 then
-                    hudObjects[i].dynamic.percentage.setPosition(x+w/2-20, y-9)
-                    hudObjects[i].dynamic.percentage.setText(tostring(math.floor(percentage*10000000)/100000).."%")
-                else
-                    hudObjects[i].dynamic.percentage.setPosition(x+w/2-5, y-9)
-                    hudObjects[i].dynamic.percentage.setText(parser.percentage(percentage))
-                end
-
-                logToFile("Fill time calculation: fillTime = " .. fillTime .. ", fillTimeString = " .. fillTimeString)
-            end
-
-            logToFile("Final state before drawing HUD: tick = " .. tick .. ", percentage = " .. percentage .. ", offset = " .. energyData.offset)
+            logToFile("Final state of energy data: " .. serialization.serialize(energyData))
 
             if #hudObjects < #glasses then
                 for i = 1, #glasses do
@@ -274,6 +241,7 @@ function powerDisplay.widget(glasses, data)
                     })
                 end 
             end
+
             for i = 1, #hudObjects do
                 if hudObjects[i] then
                     if hudObjects[i].width == 0 then hudObjects[i].width = screen.size(hudObjects[i].resolution, hudObjects[i].scale)[1]/2 - 91 end
@@ -386,10 +354,27 @@ function powerDisplay.widget(glasses, data)
                         hudObjects[i].dynamic.output.setText("-" .. parser.metricNumber(energyData.output) .. " " .. energyUnit.."/t")
                     end
 
+                    local fillTimeString = ""
+                    local fillTime = 0
                     if data.wirelessMode then
                         hudObjects[i].dynamic.percentage.setText("")
                     else
-                        -- fillTimeString was set above
+                        if energyData.energyPerTick > 0 then
+                            fillTime = math.floor((maxEU-currentEU)/(energyData.energyPerTick*20))
+                            fillTimeString = "Full: " .. time.format(math.abs(fillTime))
+                        elseif energyData.energyPerTick < 0 then
+                            fillTime = math.floor((currentEU)/(energyData.energyPerTick*20))
+                            fillTimeString = "Empty: " .. time.format(math.abs(fillTime))
+                        else
+                            fillTimeString = ""
+                        end
+                        if math.abs(fillTime) > 500000 or percentage < 0.05 then
+                            hudObjects[i].dynamic.percentage.setPosition(x+w/2-20, y-9)
+                            hudObjects[i].dynamic.percentage.setText(tostring(math.floor(percentage*10000000)/100000).."%")
+                        else
+                            hudObjects[i].dynamic.percentage.setPosition(x+w/2-5, y-9)
+                            hudObjects[i].dynamic.percentage.setText(parser.percentage(percentage))
+                        end
                     end
 
                     if data.state == states.OFF then
